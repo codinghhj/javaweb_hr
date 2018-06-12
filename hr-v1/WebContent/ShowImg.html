@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+	<body>
+		<img id="img1" src="http://localhost:7777/hr-wjx/GetPicServlet?picId=64"/>
+		<script src="js/jquery.js"></script>
+		<script src="js/global.js"></script>
+		<script src="js/param.js"></script>
+		<script type="text/javascript">
+			$(function() {
+				var picId = $.getParam("picId");
+				$('#img1').attr('src',baseUrl + "/GetPicServlet?picId=" +picId );
+			});
+		</script>
+	</body>
+</html>

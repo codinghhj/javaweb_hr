@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+	</head>
+
+	<body>
+		<script>
+			function getParam(key) {
+
+				var url = "http://www.baidu.com?username=tom&password=123456&flag=&vip";
+				var index = url.indexOf('?'); //返回问好的位置
+				var str = url.substring(index+1); //截取？后的参数字符串
+				//根据&分解字符串
+				var arr = str.split('&');
+				//遍历
+				for(var i = 0;i < arr.length;i++) {
+					console.log(arr[i]);
+					var param = arr[i].split('=');
+					if(param[0] == key) {
+						return param[1];
+					}
+				}
+				
+			}
+			alert(getParam("vip"));
+		</script>
+	</body>
+
+</html>
