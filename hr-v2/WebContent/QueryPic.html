@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<!--设置视口,只在移动端生效,设置视口宽度=当前手机设备宽度，默认缩放1，用户不允许手动缩放-->
+		<meta name="viewport" content="width=width-device,initial-scale=1.0,user-scalable=no" />
+		<meta charset="UTF-8">
+		<title></title>
+		<!--引入BootStrap的核心css-->
+		<link rel="stylesheet" href="js/bootstrap/css/bootstrap.css" />
+		<style type="text/css">
+			.img-list img {
+				width: 200px;
+				border: none;
+			}
+			
+			.img-list .item {
+				padding: 10px;
+				background: #eee;
+				position: absolute;
+				margin: 5px;
+			}
+			
+			.img-list .item p {
+				line-height: 20px;
+				margin-top: 5px;
+				letter-spacing: 1px;
+				color: #333;
+				width: 200px;
+				white-space: normal;
+			}
+			.item{
+				
+			}
+			.item .btns{
+				display: none;
+			}
+			.item .btns input{
+				width:150px;
+				margin-top: 20px;
+				text-align: center;
+			}
+			.item:hover .btns{
+				display: block;
+				opacity: 1;
+				position: absolute;
+				left: 50%;
+				transform:translateX(-50%) translateY(-50%);
+				top: 50%;
+			} 
+				.item:hover img{
+					opacity: 0.5;
+				}
+			.item:hover{ 
+				background: rgba(0,0,0,0.1);
+			
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<div class="container">
+
+			<ol class="breadcrumb">
+				<li>
+					<a href="#">人力资源管理系统</a>
+				</li>
+				<li>
+					<a href="#">图库管理</a>
+				</li>
+				<li>查询图库数据</li>
+			</ol>
+
+			<h2 class="page-header">图库数据列表</h2>
+
+			<div class="row">
+				<div class="col-sm-offset-8 col-sm-4">
+					<input id="uploadBtn" type="button" class="btn btn-success btn-block" value="上传图片" />
+				</div>
+			</div>
+
+			<div class="row img-list">
+				<div class="item" v-for="(pic,index) in picData">
+					<a v-bind:href="'ShowImg.html?picId=' + pic.picId" target="_blank">
+						<img v-bind:src="baseUrl + '/pic/get?picId=' + pic.picId" />
+					</a>
+					<p>{{pic.picInfo}}</p>
+					<div class="row btns">
+						<input type="button" value="删除" class="btn btn-danger btn-xs " @click="del(pic.picId,index)">
+						<input type="button" value="下载" class="btn btn-info btn-xs" @click="showImg(pic.picId)">
+					</div>
+				</div>
+
+			</div>
+			<br>
+			<div class="row">
+				<input type="button" value="加载更多" id="loadBtn" class="btn btn-success btn-block" >
+			</div>
+			<br>
+			<br>
+		</div>
+
+		<!--引入jquery-->
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<!--引入全局js-->
+		<script type="text/javascript" src="js/global.js"></script>
+		<!--引入jquery.js,实现js功能-->
+		<script type="text/javascript" src="js/bootstrap/js/bootstrap.js"></script>
+		<!--引入layer层-->
+		<script type="text/javascript" src="js/layer/layer.js"></script>
+		<script src="js/vue2.5.js"></script>
+		<script src="js/vue-resource.js"></script>
+		<!-- 瀑布流图片插件 -->
+		<script src="js/masonry/jquery.masonry.js"></script>
+		<script type="text/javascript">
+			window.onload = function() {
+
+				var v = new Vue({
+					el: '.container', //应用vue的区域元素
+					data: { //数据
+						picData: [],
+						pager: {},
+						baseUrl: baseUrl
+					},
+					methods: { //功能方法
+						//查询方法
+						query: function(pageNum) {
+							var that = this;
+							
+							$.ajaxSetup({
+								async: true
+							});
+							$.getJSON(baseUrl + "/pic/query", {
+								pageNum: pageNum,
+								pageSize: 5
+							}, function(data) {
+								console.log(data);
+								that.pager = data.pager;
+							
+								$.each(data.list,function(index,item) {
+									that.picData.push(item);
+								})
+								console.log(that.picData);
+									//生成瀑布流
+								setTimeout(function() {
+									
+									var $container = $('.img-list');
+
+									$container.imagesLoaded(function() {
+	
+									$container.masonry({
+										itemSelector: '.item',
+										columnWidth: 5 //每两列之间的间隙为5像素
+									});
+
+									});
+									$container.masonry('reload');
+									
+									//判断当前页码是否是第一页
+									if(pageNum == v.pager.pageCount) {
+										$('#loadBtn').prop('disabled',true);
+										$('#loadBtn').val('没有更多图片啦');
+									}
+									
+								},0);
+								
+							}).done(function(){
+								
+								
+							});
+
+						
+						},
+						//删除数据方法
+						del: function(picId, index) {
+							if(!window.confirm("确定要删除此图片吗")) {
+								return;
+							}
+							$.get(baseUrl + "/pic/delete", {
+								picId,
+								picId
+							}, function(data) {
+								layer.msg("删除成功");
+								setTimeout(function() {
+									//删除数据模型中对应的数据
+									v.picData.splice(index, 1);
+									layer.closeAll();
+
+								}, 1000);
+
+							}).error(function(xhr, errorStatus, errorText) {
+								layer.msg("请求失败，" + errorText);
+							});
+
+						},
+						showImg:function(picId) {
+							location.href  = baseUrl + '/pic/download?picId=' + picId;
+						}
+					}
+				});
+				//查询数据
+				v.query(1);
+				
+				$('#uploadBtn').click(function() {
+					layer.open({
+						title:'上传图片',
+						type:2,
+						area:['620px','600px'],
+						content:'AddPic.html'
+					});
+				});
+				
+				
+				//加载下一页数据
+				$('#loadBtn').click(function() {
+					v.query(v.pager.pageNum + 1);
+					var $container = $('.img-list');
+					
+				});
+			}
+		</script>
+	</body>
+
+</html>
